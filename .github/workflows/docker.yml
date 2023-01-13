@@ -1,0 +1,67 @@
+name: Docker
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+    paths:
+      - Dockerfile
+  pull_request:
+    branches: ["main"]
+    paths:
+      - Dockerfile
+
+jobs:
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Generate Docker image name
+        run: |
+          echo "DOCKER_IMAGE=$(echo ${GIT_REPO,,} | sed 's/docker-//')" >> ${GITHUB_ENV}
+        env:
+          GIT_REPO: "${{ github.repository }}"
+
+      - name: Generate Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            docker.io/${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        env:
+          DOCKER_BUILDKIT: 1
+        with:
+          push: ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags/') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ github.repository }}:latest
+          cache-to: type=inline
