@@ -1,4 +1,4 @@
-name: Docker
+name: Build Docker image
 
 on:
   push:
@@ -7,13 +7,12 @@ on:
     paths:
       - Dockerfile
   pull_request:
-    branches: ["main"]
     paths:
       - Dockerfile
 
 jobs:
-  docker:
-    name: Docker
+  docker_build:
+    name: Docker build
     runs-on: ubuntu-latest
 
     steps:
@@ -21,17 +20,15 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Generate Docker image name
-        run: |
-          echo "DOCKER_IMAGE=$(echo ${GIT_REPO,,} | sed 's/docker-//')" >> ${GITHUB_ENV}
-        env:
-          GIT_REPO: "${{ github.repository }}"
+        id: image_name
+        run: echo "docker_image=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//')" >> ${GITHUB_OUTPUT}
 
       - name: Generate Docker metadata
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: |
-            docker.io/${{ env.DOCKER_IMAGE }}
+            docker.io/${{ steps.image_name.outputs.docker_image }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -40,11 +37,9 @@ jobs:
             type=semver,pattern={{major}}
 
       - name: Set up QEMU
-        id: qemu
         uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Login to Docker Hub
@@ -63,5 +58,23 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:latest
+          cache-from: type=registry,ref=${{ steps.image_name.outputs.docker_image }}:latest
           cache-to: type=inline
+
+      - name: Parse built caddy version from image
+        id: version
+        run: echo "caddy_version=$(docker inspect ${{ steps.image_name.outputs.docker_image }} | jq -r '.[0].ContainerConfig.Env[] | select(contains("CADDY_VERSION")) | split("=")[1][1:]')" | tee -a ${GITHUB_OUTPUT}
+
+      - name: Check for existing version tag
+        uses: mukunku/tag-exists-action@v1.2.0
+        id: check_tag
+        with:
+          tag: v${{ steps.version.outputs.caddy_version }}
+
+      - name: Push new version tag
+        id: tag
+        uses: mathieudutour/github-tag-action@v6.1
+        if: needs.version_check.outputs.tag_exists != 'true'
+        with:
+          default_bump: false
+          custom_tag: v${{ steps.version.outputs.caddy_version }}
