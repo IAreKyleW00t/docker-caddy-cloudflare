@@ -1,43 +1,49 @@
-name: Docker
+name: Docker build and publish
 
 on:
   push:
-    branches: ["main"]
-    tags: ["v*"]
+    branches:
+      - main
     paths:
       - Dockerfile
   pull_request:
-    branches: ["main"]
+    types:
+      - opened
+      - reopened
+    branches:
+      - main
     paths:
       - Dockerfile
 
 jobs:
   docker:
-    name: Docker
+    name: Build and publish docker image
     runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: 1
 
     steps:
-      - name: Checkout
+      - name: Checkout GitHub repository
         uses: actions/checkout@v3
 
-      - name: Generate Docker image name
-        run: |
-          echo "DOCKER_IMAGE=$(echo ${GIT_REPO,,} | sed 's/docker-//')" >> ${GITHUB_ENV}
-        env:
-          GIT_REPO: "${{ github.repository }}"
+      - name: Generate Docker-compliant image name from repo
+        id: image_name
+        run: echo "name=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//')" | tee -a ${GITHUB_OUTPUT}
 
-      - name: Generate Docker metadata
-        id: meta
+      - name: Parse Caddy version from Dockerfile
+        id: caddy_version
+        run: echo "version=$(grep -Eo 'caddy:[0-9]+\.[0-9]+\.[0-9]+$' Dockerfile | cut -d ':' -f2)" | tee -a ${GITHUB_OUTPUT}
+
+      - name: Generate Docker metadata with Caddy version
+        id: metadata
         uses: docker/metadata-action@v4
         with:
           images: |
-            docker.io/${{ env.DOCKER_IMAGE }}
+            docker.io/${{ steps.image_name.outputs.name }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{version}},value=v${{ steps.caddy_version.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ steps.caddy_version.outputs.version }}
+            type=semver,pattern={{major}},value=v${{ steps.caddy_version.outputs.version }}
 
       - name: Set up QEMU
         id: qemu
@@ -47,21 +53,29 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Login to Docker Hub
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      - name: Login to DockerHub
+        if: github.event_name == 'push'
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push Docker container
         uses: docker/build-push-action@v4
-        env:
-          DOCKER_BUILDKIT: 1
         with:
-          push: ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags/') }}
-          tags: ${{ steps.meta.outputs.tags }}
+          push: ${{ github.event_name == 'push' }}
+          context: . # don't re-pull git source
+          tags: ${{ steps.metadata.outputs.tags }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:latest
+          labels: ${{ steps.metadata.outputs.labels }}
+          cache-from: type=registry,ref=${{ steps.image_name.outputs.name }}:latest
           cache-to: type=inline
+
+      - name: Create and push version tag
+        if: github.event_name == 'push'
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: false
+          custom_tag: ${{ steps.caddy_version.outputs.version }}
+          tag_prefix: v
