@@ -1,9 +1,9 @@
 # Caddy-Cloudflare
 
 [![Docker Hub](https://img.shields.io/badge/Docker%20Hub-iarekylew00t%2Fcaddy--cloudflare-blue?style=flat)](https://hub.docker.com/r/iarekylew00t/caddy-cloudflare)
-[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/iarekylew00t/caddy-cloudflare/latest?style=flat)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tags)
-[![Docker](https://img.shields.io/github/actions/workflow/status/IAreKyleW00t/docker-caddy-cloudflare/docker.yml?style=flat)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/actions/workflows/docker.yml)
-[![Docker](https://img.shields.io/github/license/IAreKyleW00t/docker-caddy-cloudflare)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/blob/main/LICENSE)
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/IAreKyleW00t/docker-caddy-cloudflare)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tags)
+[![GitHub build status](https://img.shields.io/github/actions/workflow/status/IAreKyleW00t/docker-caddy-cloudflare/docker.yml?style=flat)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/actions/workflows/docker.yml)
+[![License](https://img.shields.io/github/license/IAreKyleW00t/docker-caddy-cloudflare)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/blob/main/LICENSE)
 
 The official [Caddy](https://hub.docker.com/_/caddy) Docker image with the added [caddy-dns/cloudflare](https://github.com/caddy-dns/cloudflare) module for DNS-01 ACME validation support. This image does not change anything with Caddy except replacing the `caddy` binary. Built for x86 and ARM!
 
@@ -72,6 +72,14 @@ You can easily build the Docker image locally by doing
 
 ```sh
 docker build -t caddy-cloudflare .
+```
+
+## Container signatures
+
+Using [my key](https://github.com/IAreKyleW00t/IAreKyleW00t/blob/main/cosign.pub), all container images will be automatically signed via [Cosign](https://docs.sigstore.dev/cosign/overview/). You can use the following command to verify the integrity of these images yourself.
+
+```sh
+cosign verify --key cosign.pub iarekylew00t/caddy-cloudflare:latest
 ```
 
 ## Contributing
