@@ -76,7 +76,7 @@ docker build -t caddy-cloudflare .
 
 ## Container signatures
 
-Using [my key](https://github.com/IAreKyleW00t/IAreKyleW00t/blob/main/cosign.pub), all container images will be automatically signed via [Cosign](https://docs.sigstore.dev/cosign/overview/). You can use the following command to verify the integrity of these images yourself.
+All container images will be automatically signed via [Cosign](https://docs.sigstore.dev/cosign/overview/) using [my key](https://github.com/IAreKyleW00t/IAreKyleW00t/blob/main/cosign.pub). You can use the following command to verify the integrity of these images yourself.
 
 ```sh
 cosign verify --key cosign.pub iarekylew00t/caddy-cloudflare:latest
