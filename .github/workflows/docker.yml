@@ -1,4 +1,4 @@
-name: Docker build and publish
+name: Docker
 
 on:
   push:
@@ -17,7 +17,7 @@ on:
 
 jobs:
   docker:
-    name: Build and publish docker image
+    name: Build, Publish, and Sign Docker image
     runs-on: ubuntu-latest
     env:
       DOCKER_BUILDKIT: 1
@@ -30,31 +30,27 @@ jobs:
         if: github.event_name == 'push'
         uses: sigstore/cosign-installer@v3.0.1
 
-      - name: Generate Docker-compliant image name from repo
-        id: image_name
-        run: echo "name=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//')" | tee -a ${GITHUB_OUTPUT}
+      - name: Generate Docker-compliant image name from repository
+        run: echo "IMAGE_NAME=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//')" | tee -a $GITHUB_ENV
 
       - name: Parse Caddy version from Dockerfile
-        id: caddy_version
-        run: echo "version=$(grep -Eo 'caddy:[0-9]+\.[0-9]+\.[0-9]+$' Dockerfile | cut -d ':' -f2)" | tee -a ${GITHUB_OUTPUT}
+        run: echo "CADDY_VERSION=$(grep -Eo 'caddy:[0-9]+\.[0-9]+\.[0-9]+$' Dockerfile | cut -d ':' -f2)" | tee -a $GITHUB_ENV
 
       - name: Generate Docker metadata with Caddy version
         id: metadata
         uses: docker/metadata-action@v4
         with:
           images: |
-            docker.io/${{ steps.image_name.outputs.name }}
+            docker.io/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}},value=v${{ steps.caddy_version.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=v${{ steps.caddy_version.outputs.version }}
-            type=semver,pattern={{major}},value=v${{ steps.caddy_version.outputs.version }}
+            type=semver,pattern={{version}},value=v${{ env.CADDY_VERSION }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ env.CADDY_VERSION }}
+            type=semver,pattern={{major}},value=v${{ env.CADDY_VERSION }}
 
       - name: Set up QEMU
-        id: qemu
         uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
-        id: buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Login to Docker Hub
@@ -64,32 +60,32 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker container
+      - name: Build and Push Docker image
         id: build
         uses: docker/build-push-action@v4
         with:
+          context: .
           push: ${{ github.event_name == 'push' }}
-          context: . # don't re-pull git source
           tags: ${{ steps.metadata.outputs.tags }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
           labels: ${{ steps.metadata.outputs.labels }}
-          cache-from: type=registry,ref=${{ steps.image_name.outputs.name }}:latest
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
           cache-to: type=inline
 
-      - name: Sign Docker Hub images
+      - name: Sign Docker images
         if: github.event_name == 'push'
         run: |
           cosign sign --yes --recursive -a CI=true --key env://COSIGN_PRIVATE_KEY \
-            "${{ steps.image_name.outputs.name }}@${{ steps.build.outputs.digest }}"
+            "${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}"
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
 
-      - name: Create and push version tag
+      - name: Create and push Git version tag
         if: github.event_name == 'push'
         uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           default_bump: false
-          custom_tag: ${{ steps.caddy_version.outputs.version }}
+          custom_tag: ${{ env.CADDY_VERSION }}
           tag_prefix: v
