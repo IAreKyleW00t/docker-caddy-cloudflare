@@ -1,0 +1,27 @@
+name: README
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - README.md
+
+jobs:
+  github-docker:
+    name: Sync GitHub README with Docker Hub
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout GitHub repository
+        uses: actions/checkout@v3
+
+      - name: Generate Docker-compliant image name from repository
+        run: echo "IMAGE_NAME=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//')" | tee -a $GITHUB_ENV
+
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.IMAGE_NAME }}
+          short-description: ${{ github.event.repository.description }}
