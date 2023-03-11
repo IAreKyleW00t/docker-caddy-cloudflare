@@ -91,7 +91,7 @@ cosign verify --key cosign.pub iarekylew00t/caddy-cloudflare:latest
 
 ## Contributing
 
-Feel free to contribute and make things better by opening an [Issue](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/issues) or [Pull Requests](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/pulls).
+Feel free to contribute and make things better by opening an [Issue](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/issues) or [Pull Request](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/pulls).
 
 ## License
 
