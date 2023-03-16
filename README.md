@@ -8,7 +8,11 @@
 The official [Caddy](https://hub.docker.com/_/caddy) Docker image with the added [caddy-dns/cloudflare](https://github.com/caddy-dns/cloudflare) module for DNS-01 ACME validation support. This image does not change anything with Caddy except replacing the `caddy` binary. Built for x86 and ARM!
 
 ```sh
+# Docker Hub
 docker pull iarekylew00t/caddy-cloudflare:latest
+
+# GHCR
+docker pull ghcr.io/iarekylew00t/caddy-cloudflare:latest
 ```
 
 ## Tags
@@ -83,10 +87,13 @@ docker build -t caddy-cloudflare .
 
 ## Container signatures
 
-All container images will be automatically signed via [Cosign](https://docs.sigstore.dev/cosign/overview/) using [my key](https://github.com/IAreKyleW00t/IAreKyleW00t/blob/main/cosign.pub). You can use the following command to verify the integrity of these images yourself.
+All container images will be automatically signed via [Cosign](https://docs.sigstore.dev/cosign/overview/) using [keyless signatures](https://docs.sigstore.dev/cosign/keyless/). You can use the following command to verify the integrity of these images yourself.
 
 ```sh
-cosign verify --key cosign.pub iarekylew00t/caddy-cloudflare:latest
+cosign verify \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp https://github.com/IAreKyleW00t/docker-caddy-cloudflare/.github/workflows/ \
+  iarekylew00t/caddy-cloudflare:latest
 ```
 
 ## Contributing
