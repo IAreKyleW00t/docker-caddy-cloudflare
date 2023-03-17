@@ -85,8 +85,8 @@ jobs:
           tags: ttl.sh/${{ env.IMAGE_NAME }}:${{ github.sha }}
           labels: ${{ steps.metadata.outputs.labels }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
-          cache-from: type=registry,ref=ttl.sh/${{ env.IMAGE_NAME }}-${{ github.sha }}-cache:1h
-          cache-to: type=registry,ref=ttl.sh/${{ env.IMAGE_NAME }}-${{ github.sha }}-cache:1h
+          cache-from: type=registry,ref=ttl.sh/${{ env.IMAGE_NAME }}-cache:1h
+          cache-to: type=registry,ref=ttl.sh/${{ env.IMAGE_NAME }}-cache:1h
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.9.2
@@ -113,7 +113,7 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
-          cache-from: type=registry,ref=ttl.sh/${{ env.IMAGE_NAME }}-${{ github.sha }}-cache:1h
+          cache-from: type=registry,ref=ttl.sh/${{ env.IMAGE_NAME }}-cache:1h
 
       - name: Sign Docker images
         if: github.event_name == 'push'
