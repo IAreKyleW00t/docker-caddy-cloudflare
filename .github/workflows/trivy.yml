@@ -7,6 +7,7 @@ on:
     branches: [main]
   schedule:
     - cron: 0 0 * * * # daily at midnight
+  workflow_call:
 
 jobs:
   trivy-repo:
@@ -36,7 +37,7 @@ jobs:
     name: Scan latest Docker image
     runs-on: ubuntu-latest
 
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_call'
     steps:
       - name: Checkout GitHub repository
         uses: actions/checkout@v3
