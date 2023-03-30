@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - README.md
+      - .github/workflows/readme.yml
 
 jobs:
   github-docker:
