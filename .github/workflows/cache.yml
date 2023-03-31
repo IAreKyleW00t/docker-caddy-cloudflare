@@ -1,0 +1,51 @@
+name: Cache Sync
+
+on:
+  pull_request:
+    branches: [main]
+    types:
+      - closed
+
+env:
+  DOCKER_BUILDKIT: 1
+  COSIGN_EXPERIMENTAL: 1
+
+jobs:
+  pr-cache:
+    name: Copy PR build cache
+    runs-on: ubuntu-latest
+
+    env:
+      DOCKER_BUILDKIT: 1
+
+    if: github.event.pull_request.merged
+    steps:
+      - name: Generate docker-compliant image name
+        run: echo "IMAGE_NAME=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//')" | tee -a $GITHUB_ENV
+
+      - name: Generate base tag
+        run: echo "BASE_BRANCH=$(echo ${GITHUB_BASE_REF,,} | sed 's/[^a-zA-Z0-9]/-/g')" | tee -a $GITHUB_ENV
+
+      - name: Generate head tag
+        run: echo "HEAD_BRANCH=$(echo ${GITHUB_HEAD_REF,,} | sed 's/[^a-zA-Z0-9]/-/g')" | tee -a $GITHUB_ENV
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.0.1
+
+      - name: Install regctl
+        uses: iarekylew00t/regctl-installer@v1
+
+      - name: Verify container images
+        run: |
+          cosign verify \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            --certificate-identity-regexp https://github.com/$GITHUB_REPOSITORY/.github/workflows/ \
+            "ttl.sh/$IMAGE_NAME:$BASE_BRANCH"
+        env:
+          COSIGN_EXPERIMENTAL: 1
+
+      - name: Copy PR build cache to branch tag
+        run: |
+          regctl image copy --verbosity info --digest-tags --force-recursive \
+            "ttl.sh/$IMAGE_NAME:$HEAD_BRANCH" \
+            "ttl.sh/$IMAGE_NAME:$BASE_BRANCH"

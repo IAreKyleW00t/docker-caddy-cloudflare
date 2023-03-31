@@ -1,60 +1,102 @@
 name: Trivy
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   schedule:
     - cron: 0 0 * * * # daily at midnight
+  workflow_call:
+    inputs:
+      image-ref:
+        type: string
+        required: false
+        description: Container image ref to be scanned by Trivy
+
+env:
+  DOCKER_BUILDKIT: 1
+  COSIGN_EXPERIMENTAL: 1
 
 jobs:
   trivy-repo:
     name: Scan repository
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout GitHub repository
-        uses: actions/checkout@v3
+    permissions:
+      security-events: write # upload security results
 
-      - name: Run Trivy vulnerability scanner
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get main branch SHA
+        run: |
+          git pull origin main:main
+          echo "BASE_SHA=$(git merge-base --fork-point main)" | tee -a $GITHUB_ENV
+
+      - name: Scan repo filesystem
         uses: aquasecurity/trivy-action@0.9.2
         with:
           scan-type: fs
-          ignore-unfixed: true
           format: sarif
           output: trivy-results.sarif
-          severity: HIGH,CRITICAL
 
-      - name: Upload Trivy scan results to GitHub Security
+      - name: Upload scan results to GitHub Security
         uses: github/codeql-action/upload-sarif@v2
         if: always()
         with:
           sarif_file: trivy-results.sarif
+          ref: refs/heads/main
+          sha: ${{ env.BASE_SHA }}
 
   trivy-docker:
-    name: Scan latest Docker image
+    name: Scan container image
     runs-on: ubuntu-latest
 
-    if: github.event_name == 'schedule'
+    permissions:
+      security-events: write # upload security results
+
     steps:
-      - name: Checkout GitHub repository
+      - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Generate Docker-compliant image name from repository
-        run: echo "IMAGE_NAME=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//')" | tee -a $GITHUB_ENV
+      - name: Get main branch SHA
+        run: |
+          git pull origin main:main
+          echo "BASE_SHA=$(git merge-base --fork-point main)" | tee -a $GITHUB_ENV
 
-      - name: Run Trivy vulnerability scanner
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.0.1
+
+      - name: Generate docker-compliant image name
+        run: |
+          if [[ -z "$IMAGE_REF" ]]; then
+            echo "IMAGE_REF=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//'):latest" | tee -a $GITHUB_ENV
+          else
+            echo "IMAGE_REF=$IMAGE_REF" | tee -a $GITHUB_ENV
+          fi
+        env:
+          IMAGE_REF: ${{ inputs.image-ref }}
+
+      - name: Verify container images
+        run: |
+          cosign verify \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            --certificate-identity-regexp https://github.com/$GITHUB_REPOSITORY/.github/workflows/ \
+            $IMAGE_REF
+
+      - name: Scan container image
         uses: aquasecurity/trivy-action@0.9.2
         with:
-          image-ref: ${{ env.IMAGE_NAME }}:latest
-          ignore-unfixed: true
+          image-ref: ${{ env.IMAGE_REF }}
           format: sarif
           output: trivy-results.sarif
-          severity: HIGH,CRITICAL
 
-      - name: Upload Trivy scan results to GitHub Security
+      - name: Upload scan results to GitHub Security
         uses: github/codeql-action/upload-sarif@v2
         if: always()
         with:
           sarif_file: trivy-results.sarif
+          ref: refs/heads/main
+          sha: ${{ env.BASE_SHA }}
