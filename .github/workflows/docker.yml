@@ -1,18 +1,17 @@
 name: Docker
 
 on:
+  workflow_dispatch: # manual
   push:
     branches: [main]
     paths:
       - Dockerfile
       - .dockerignore
-      - .github/workflows/docker.yml
   pull_request:
     branches: [main]
     paths:
       - Dockerfile
       - .dockerignore
-      - .github/workflows/docker.yml
 
 env:
   DOCKER_BUILDKIT: 1

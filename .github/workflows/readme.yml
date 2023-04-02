@@ -1,11 +1,11 @@
 name: README
 
 on:
+  workflow_dispatch: # manual
   push:
     branches: [main]
     paths:
       - README.md
-      - .github/workflows/readme.yml
 
 jobs:
   github-docker:

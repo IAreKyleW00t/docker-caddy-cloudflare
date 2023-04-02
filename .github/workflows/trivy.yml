@@ -1,6 +1,7 @@
 name: Trivy
 
 on:
+  workflow_dispatch: # manual
   schedule:
     - cron: 0 0 * * * # daily at midnight
   workflow_call:
