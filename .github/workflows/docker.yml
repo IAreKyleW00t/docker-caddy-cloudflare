@@ -85,7 +85,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.0.1
+        uses: sigstore/cosign-installer@v3.0.2
 
       - name: Install regctl
         uses: iarekylew00t/regctl-installer@v1
@@ -183,7 +183,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.0.1
+        uses: sigstore/cosign-installer@v3.0.2
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
