@@ -40,11 +40,11 @@ docker run --rm -it \
   iarekylew00t/caddy-cloudflare:latest
 ```
 
-Then for _each site_ you will need to add the following to your [`tls`](https://caddyserver.com/docs/caddyfile/directives/tls#tls) directive in your `Caddyfile`
+Then set the global [acme_dns](https://caddyserver.com/docs/caddyfile/options#acme-dns) directive in your `Caddyfile`
 
 ```Caddyfile
-tls {
-  dns cloudflare {env.CF_API_TOKEN}
+{
+  acme_dns cloudflare {env.CF_API_TOKEN}
 }
 ```
 
