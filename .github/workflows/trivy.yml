@@ -68,7 +68,7 @@ jobs:
           echo "BASE_SHA=$(git merge-base --fork-point main)" | tee -a $GITHUB_ENV
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.0.5
+        uses: sigstore/cosign-installer@v3.1.0
 
       - name: Generate docker-compliant image name
         run: |
