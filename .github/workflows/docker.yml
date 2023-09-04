@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Generate docker-compliant image name
         id: name
@@ -82,7 +82,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.1.2
@@ -180,7 +180,7 @@ jobs:
     if: github.event_name == 'push'
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.1.2
