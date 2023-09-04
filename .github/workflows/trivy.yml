@@ -35,7 +35,7 @@ jobs:
           echo "BASE_SHA=$(git merge-base --fork-point main)" | tee -a $GITHUB_ENV
 
       - name: Scan repo filesystem
-        uses: aquasecurity/trivy-action@0.11.2
+        uses: aquasecurity/trivy-action@0.12.0
         with:
           scan-type: fs
           format: sarif
@@ -88,7 +88,7 @@ jobs:
             $IMAGE_REF
 
       - name: Scan container image
-        uses: aquasecurity/trivy-action@0.11.2
+        uses: aquasecurity/trivy-action@0.12.0
         with:
           image-ref: ${{ env.IMAGE_REF }}
           format: sarif
