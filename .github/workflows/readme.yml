@@ -20,7 +20,7 @@ jobs:
         run: echo "IMAGE_NAME=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//')" | tee -a $GITHUB_ENV
 
       - name: Update Docker Hub description
-        uses: peter-evans/dockerhub-description@v3
+        uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
