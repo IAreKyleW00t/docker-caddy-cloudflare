@@ -33,7 +33,7 @@ jobs:
         run: echo "HEAD_BRANCH=$(echo ${GITHUB_HEAD_REF,,} | sed 's/[^a-zA-Z0-9]/-/g')" | tee -a $GITHUB_ENV
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.4.0
+        uses: sigstore/cosign-installer@v3.5.0
 
       - name: Install regctl
         uses: iarekylew00t/regctl-installer@v1
