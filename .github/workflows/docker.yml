@@ -188,7 +188,7 @@ jobs:
 
   publish:
     name: Publish image
-    if: false
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [metadata, build, trivy]
     runs-on: ubuntu-latest
     permissions:
