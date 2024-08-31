@@ -1,0 +1,80 @@
+name: README Versions
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches: [main]
+    paths:
+      - Dockerfile
+
+jobs:
+  readme:
+    name: Update README versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Parse Caddy version
+        id: caddy
+        shell: bash
+        run: |
+          CADDY_VERSION=$(grep -m 1 -Eo 'caddy:[0-9]+\.[0-9]+\.[0-9]+' Dockerfile \
+            | sed -E 's/.+:([0-9]+\.[0-9]+\.[0-9]+)(.+)?$/\1/g')
+          MAJOR=$(echo "$CADDY_VERSION" | cut -d . -f 1)
+          MINOR=$(echo "$CADDY_VERSION" | cut -d . -f 2)
+          PATCH=$(echo "$CADDY_VERSION" | cut -d . -f 3)
+          cat <<EOF | tee -a "$GITHUB_OUTPUT"
+          version=$CADDY_VERSION
+          major=$MAJOR
+          minor=$MINOR
+          patch=$PATCH
+          EOF
+
+      - name: Update README
+        shell: bash
+        env:
+          VERSION: ${{ steps.caddy.outputs.version }}
+          MAJOR: ${{ steps.caddy.outputs.major }}
+          MINOR: ${{ steps.caddy.outputs.minor }}
+          PATCH: ${{ steps.caddy.outputs.patch }}
+        run: |
+          cat > tags.md <<EOF
+          - [\`latest\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/v$VERSION)
+          - [\`$VERSION\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/v$VERSION)
+          - [\`$MAJOR.$MINOR\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/v$MAJOR.$MINOR)
+          - [\`$MAJOR\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/v$MAJOR)
+          EOF
+          awk '
+              BEGIN{p=1}
+              $1=="<!--START-TAGS-->"{p=0;print;next}
+              $1=="<!--END-TAGS-->"{system("cat tags.md");p=1}
+              p
+          ' README.md > README.md.new
+          mv README.md.new README.md
+          rm tags.md
+
+      - name: Check if README was updated
+        id: changed
+        shell: bash
+        run: |
+          if git diff-index --quiet HEAD ; then
+            echo "changed=false" | tee -a "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" | tee -a "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push changes back to PR
+        if: steps.changed.outputs.changed == 'true'
+        uses: ChromeQ/commit@99a563633526aeb2d5c2b02b1521accee9a8c896 # v2.x
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          commit-message: "docs: Updating README for v${{ steps.caddy.outputs.version }}"
+          files: |
+            README.md
