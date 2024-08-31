@@ -41,7 +41,7 @@ jobs:
         id: build-metadata
         shell: bash
         run: |
-          IMAGE_TITLE=$(echo "$GITHUB_REPOSITORY" | sed 's/.*docker-//g')
+          IMAGE_TITLE=${GITHUB_REPOSITORY/*docker-/}
           IMAGE_NAME=$(echo "${GITHUB_REPOSITORY/docker-/}" | tr '[:upper:]' '[:lower:]')
           CADDY_VERSION=$(grep -m 1 -Eo 'caddy:[0-9]+\.[0-9]+\.[0-9]+' Dockerfile \
             | sed -E 's/.+:([0-9]+\.[0-9]+\.[0-9]+)(.+)?$/\1/g')
@@ -262,9 +262,9 @@ jobs:
         env:
           CADDY_VERSION: ${{ needs.metadata.outputs.caddy-version }}
         run: |
-          MAJOR=$(echo $CADDY_VERSION | cut -d . -f 1)
-          MINOR=$(echo $CADDY_VERSION | cut -d . -f 2)
-          PATCH=$(echo $CADDY_VERSION | cut -d . -f 3)
+          MAJOR=$(echo "$CADDY_VERSION" | cut -d . -f 1)
+          MINOR=$(echo "$CADDY_VERSION" | cut -d . -f 2)
+          PATCH=$(echo "$CADDY_VERSION" | cut -d . -f 3)
           git tag -f "v$MAJOR"
           git tag -f "v$MAJOR.$MINOR"
           git tag -f "v$MAJOR.$MINOR.$PATCH"

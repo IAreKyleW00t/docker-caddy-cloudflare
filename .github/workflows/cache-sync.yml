@@ -28,8 +28,8 @@ jobs:
         shell: bash
         run: |
           IMAGE_NAME=$(echo "${GITHUB_REPOSITORY/docker-/}" | tr '[:upper:]' '[:lower:]')
-          BASE_BRANCH=$(echo ${GITHUB_BASE_REF//[^a-zA-Z0-9]/-} | tr '[:upper:]' '[:lower:]')
-          HEAD_BRANCH=$(echo ${GITHUB_HEAD_REF//[^a-zA-Z0-9]/-} | tr '[:upper:]' '[:lower:]')
+          BASE_BRANCH=$(echo "${GITHUB_BASE_REF//[^a-zA-Z0-9]/-}" | tr '[:upper:]' '[:lower:]')
+          HEAD_BRANCH=$(echo "${GITHUB_HEAD_REF//[^a-zA-Z0-9]/-}" | tr '[:upper:]' '[:lower:]')
           echo "ttl.sh/$IMAGE_NAME:$HEAD_BRANCH --> ttl.sh/$IMAGE_NAME:$BASE_BRANCH"
           regctl image copy \
             --verbosity info \
