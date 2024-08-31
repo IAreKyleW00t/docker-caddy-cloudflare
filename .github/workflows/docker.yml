@@ -289,7 +289,7 @@ jobs:
             ${{ needs.metadata.outputs.image-name }}@${{ steps.publish.outputs.digest }}
             ```
 
-            ### 🔏 Signature
+            ### 🔏 Signatures
 
             ```
             cosign verify \
