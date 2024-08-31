@@ -271,9 +271,9 @@ jobs:
           make_latest: true
           generate_release_notes: true
           body: |
-            ### [🚀 Caddy Release Notes](https://github.com/caddyserver/caddy/releases/tag/v${{ needs.metadata.outputs.caddy-version }})
+            ### [🚀 Caddy v${{ needs.metadata.outputs.caddy-version }} Changelog](https://github.com/caddyserver/caddy/releases/tag/v${{ needs.metadata.outputs.caddy-version }})
 
-            ### 🐳 Docker Images
+            ## 🐳 Docker Images
 
             ```
             ${{ needs.metadata.outputs.image-name }}:latest
@@ -281,7 +281,7 @@ jobs:
             ${{ needs.metadata.outputs.image-name }}@${{ steps.publish.outputs.digest }}
             ```
 
-            ### 🔏 Signatures
+            ## 🔏 Signatures
 
             ```
             cosign verify \
