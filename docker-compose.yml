@@ -1,7 +1,7 @@
 services:
   caddy:
     image: iarekylew00t/caddy-cloudflare:latest
-    build: . # Optional if you want build locally using docker-compose
+    build: . # If you want build locally using docker-compose
     restart: unless-stopped
     environment:
       - CF_API_TOKEN=changeme
