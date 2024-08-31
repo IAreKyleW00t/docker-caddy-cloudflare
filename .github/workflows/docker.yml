@@ -6,12 +6,10 @@ on:
     branches: [main]
     paths:
       - Dockerfile
-      - .dockerignore
   pull_request:
     branches: [main]
     paths:
       - Dockerfile
-      - .dockerignore
 
 env:
   DOCKER_BUILDKIT: "1"

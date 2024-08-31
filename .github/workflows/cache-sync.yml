@@ -9,7 +9,6 @@ on:
       - closed
     paths:
       - Dockerfile
-      - .dockerignore
 
 env:
   DOCKER_BUILDKIT: "1"
