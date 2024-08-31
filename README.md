@@ -4,8 +4,16 @@
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/IAreKyleW00t/docker-caddy-cloudflare?label=version)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tags)
 [![GitHub build status](https://img.shields.io/github/actions/workflow/status/IAreKyleW00t/docker-caddy-cloudflare/docker.yml?style=flat)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/actions/workflows/docker.yml)
 [![License](https://img.shields.io/github/license/IAreKyleW00t/docker-caddy-cloudflare)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/blob/main/LICENSE)
+![Dependabot](https://img.shields.io/badge/dependabot-025E8C?style=flat&logo=dependabot&logoColor=white)
 
-The official [Caddy](https://hub.docker.com/_/caddy) Docker image with the added [caddy-dns/cloudflare](https://github.com/caddy-dns/cloudflare) module for DNS-01 ACME validation support. This image does not change anything with Caddy except replacing the `caddy` binary. Built for all supported platforms!
+The [Caddy](https://hub.docker.com/_/caddy) Docker image with the added
+[caddy-dns/cloudflare](https://github.com/caddy-dns/cloudflare) module for
+DNS-01 ACME validation support.  
+Built for the same platforms as the upstream Caddy project (except Windows, sorry)!
+
+> [!NOTE]
+> This image does not change anything with original Caddy Docker image except
+> replace the `caddy` binary.
 
 ```sh
 # Docker Hub
@@ -24,9 +32,15 @@ The following tags are available for the `iarekylew00t/caddy-cloudflare` image.
 
 ## Usage
 
-Since this is built off the official Docker image all of the same Volumes, Environment variables, etc. can be used with this container. Please refer to the official [Caddy](https://hub.docker.com/_/caddy) Docker image and [docs](https://caddyserver.com/docs/) for more information on using Caddy.
+Since this is built off the official Docker image all of the same Volumes,
+Environment variables, etc. can be used with this container. Please refer to the
+official [Caddy](https://hub.docker.com/_/caddy) Docker image and
+[docs](https://caddyserver.com/docs/) for more information on using Caddy.
 
-Simply create the container as usual and include your `CF_API_TOKEN` (email no longer required for API Tokens). We can utilizing Caddy's support for [Environment varaiables](https://caddyserver.com/docs/caddyfile/concepts#environment-variables) to pass these values into our `Caddyfile`.
+Simply create the container as usual and include your `CF_API_TOKEN` (email no
+longer required for API Tokens). We can utilizing Caddy's support for
+[Environment varaiables](https://caddyserver.com/docs/caddyfile/concepts#environment-variables)
+to pass these values into our `Caddyfile`.
 
 ```sh
 docker run --rm -it \
@@ -40,7 +54,9 @@ docker run --rm -it \
   iarekylew00t/caddy-cloudflare:latest
 ```
 
-Then set the global [acme_dns](https://caddyserver.com/docs/caddyfile/options#acme-dns) directive in your `Caddyfile`
+Then set the global
+[acme_dns](https://caddyserver.com/docs/caddyfile/options#acme-dns) directive
+in your `Caddyfile`
 
 ```Caddyfile
 {
@@ -64,7 +80,9 @@ or via JSON
 }
 ```
 
-See the [caddy-dns/cloudflare](https://github.com/caddy-dns/cloudflare) module and [`tls`](https://caddyserver.com/docs/caddyfile/directives/tls#tls) directive for advanced usage.
+See the [caddy-dns/cloudflare](https://github.com/caddy-dns/cloudflare) module
+and [`tls`](https://caddyserver.com/docs/caddyfile/directives/tls#tls) directive
+for advanced usage.
 
 ### Creating a Cloudflare API Token
 
@@ -87,7 +105,10 @@ docker build -t caddy-cloudflare .
 
 ## Container signatures
 
-All container images will be automatically signed via [Cosign](https://docs.sigstore.dev/cosign/overview/) using [keyless signatures](https://docs.sigstore.dev/cosign/keyless/). You can use the following command to verify the integrity of these images yourself.
+All container images will be automatically signed via
+[Cosign](https://docs.sigstore.dev/cosign/overview/) using
+[keyless signatures](https://docs.sigstore.dev/cosign/keyless/). You can use the
+following command to verify the integrity of these images yourself.
 
 ```sh
 cosign verify \
@@ -98,7 +119,9 @@ cosign verify \
 
 ## Contributing
 
-Feel free to contribute and make things better by opening an [Issue](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/issues) or [Pull Request](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/pulls).
+Feel free to contribute and make things better by opening an
+[Issue](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/issues) or
+[Pull Request](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/pulls).
 
 ## License
 

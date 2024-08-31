@@ -1,103 +1,83 @@
-name: Trivy
+name: Trivy Scan
 
 on:
-  workflow_dispatch: # manual
+  workflow_dispatch:
   schedule:
     - cron: 0 0 * * * # daily at midnight
   workflow_call:
     inputs:
       image-ref:
         type: string
+        description: Docker image ref to be scanned by Trivy
         required: false
-        description: Container image ref to be scanned by Trivy
 
 env:
-  DOCKER_BUILDKIT: 1
-  COSIGN_EXPERIMENTAL: 1
+  DOCKER_BUILDKIT: "1"
+  COSIGN_EXPERIMENTAL: "1"
 
 jobs:
-  trivy-repo:
-    name: Scan repository
+  trivy-fs:
+    name: Scan filesystem
     runs-on: ubuntu-latest
-
     permissions:
-      security-events: write # upload security results
-
+      contents: read
+      security-events: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get main branch SHA
-        run: |
-          git pull origin main:main
-          echo "BASE_SHA=$(git merge-base --fork-point main)" | tee -a $GITHUB_ENV
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Scan repo filesystem
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # 0.24.0
         with:
           scan-type: fs
           format: sarif
           output: trivy-results.sarif
 
-      - name: Upload scan results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+      - name: Upload scan results
+        uses: github/codeql-action/upload-sarif@4dd16135b69a43b6c8efb853346f8437d92d3c93 # v3.26.6
+        if: cancelled() == false
         with:
           sarif_file: trivy-results.sarif
-          ref: refs/heads/main
-          sha: ${{ env.BASE_SHA }}
 
-  trivy-docker:
-    name: Scan container image
+  trivy-image:
+    name: Scan image
     runs-on: ubuntu-latest
-
     permissions:
-      security-events: write # upload security results
-
+      contents: read
+      security-events: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Get main branch SHA
-        run: |
-          git pull origin main:main
-          echo "BASE_SHA=$(git merge-base --fork-point main)" | tee -a $GITHUB_ENV
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.6.0
-
-      - name: Generate docker-compliant image name
-        run: |
-          if [[ -z "$IMAGE_REF" ]]; then
-            echo "IMAGE_REF=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//'):latest" | tee -a $GITHUB_ENV
-          else
-            echo "IMAGE_REF=$IMAGE_REF" | tee -a $GITHUB_ENV
-          fi
+      - name: Normalize image name
+        id: normalize
+        shell: bash
         env:
           IMAGE_REF: ${{ inputs.image-ref }}
-
-      - name: Verify container images
         run: |
-          cosign verify \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            --certificate-identity-regexp https://github.com/$GITHUB_REPOSITORY/.github/workflows/ \
-            $IMAGE_REF
+          if [ -z "$IMAGE_REF" ]; then
+            IMAGE_REF=$(echo "${GITHUB_REPOSITORY/docker-/}" | tr '[:upper:]' '[:lower:]')
+            if [[ "$GITHUB_REF_NAME" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              IMAGE_REF="$IMAGE_REF:${GITHUB_REF_NAME/v/}"
+            elif [ "$GITHUB_REF_NAME" == "main" ]; then
+              IMAGE_REF="$IMAGE_REF:latest"
+            else
+              BRANCH_NAME=$(echo "${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}" \
+                | tr '[:upper:]' '[:lower:]' | sed 's/[^a-zA-Z0-9]/-/g')
+              IMAGE_REF="$IMAGE_REF:$BRANCH_NAME"
+            fi
+          fi
+          echo "image-ref=$IMAGE_REF" | tee -a "$GITHUB_OUTPUT"
 
-      - name: Scan container image
-        uses: aquasecurity/trivy-action@0.24.0
+      - name: Scan image
+        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # 0.24.0
         with:
-          image-ref: ${{ env.IMAGE_REF }}
+          image-ref: ${{ steps.normalize.outputs.image-ref }}
           format: sarif
           output: trivy-results.sarif
 
-      - name: Upload scan results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+      - name: Upload scan results
+        uses: github/codeql-action/upload-sarif@4dd16135b69a43b6c8efb853346f8437d92d3c93 # v3.26.6
+        if: cancelled() == false
         with:
           sarif_file: trivy-results.sarif
-          ref: refs/heads/main
-          sha: ${{ env.BASE_SHA }}
