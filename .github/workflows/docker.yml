@@ -281,11 +281,21 @@ jobs:
           body: |
             ### [🚀 Caddy Release Notes](https://github.com/caddyserver/caddy/releases/tag/v${{ needs.metadata.outputs.caddy-version }})
 
-            ## 🐳 Docker Image
+            ### 🐳 Docker Images
 
             ```
+            ${{ needs.metadata.outputs.image-name }}:latest
             ${{ needs.metadata.outputs.image-name }}:${{ needs.metadata.outputs.caddy-version }}
             ${{ needs.metadata.outputs.image-name }}@${{ steps.publish.outputs.digest }}
+            ```
+
+            ### 🔏 Signature
+
+            ```
+            cosign verify \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              --certificate-identity-regexp ${{ github.server_url }}/${{ github.repository }}/.github/workflows/ \
+              ${{ needs.metadata.outputs.image-name }}@${{ steps.publish.outputs.digest }}
             ```
           files: |
             *.spdx.json
