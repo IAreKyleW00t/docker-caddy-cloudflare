@@ -47,7 +47,7 @@ longer required for API Tokens). We can utilize Caddy's support for
 [Environment varaiables](https://caddyserver.com/docs/caddyfile/concepts#environment-variables)
 to pass these values into our `Caddyfile`.
 
-> [!TIP]
+> [!IMPORTANT]
 > Be sure to create your `Caddyfile` beforehand to avoid Docker startup errors.
 
 ```sh
