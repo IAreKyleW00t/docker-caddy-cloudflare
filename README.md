@@ -25,13 +25,19 @@ docker pull ghcr.io/iarekylew00t/caddy-cloudflare:latest
 
 ## Tags
 
-The following tags are available for the `iarekylew00t/caddy-cloudflare` image.
+The following tags are the latest available for the
+`iarekylew00t/caddy-cloudflare` image.
 
-- `latest`
-- `<version>` (eg: `2.6.4`, including: `2.6`, `2`, etc.)
+<!--START-TAGS-->
+- [`latest`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.8.4)
+- [`2.8.4`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.8.4)
+- [`2.8`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.8)
+- [`2`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2)
+<!--END-TAGS-->
 
-Check the GitHub [Tags](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tags)
-for a full list of supported versions!
+Check the GitHub
+[Tags](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tags)
+for a list of all versions!
 
 ## Usage
 
