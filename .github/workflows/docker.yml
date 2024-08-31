@@ -1,7 +1,7 @@
-name: Docker
+name: Docker Build & Release
 
 on:
-  workflow_dispatch: # manual
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -14,89 +14,100 @@ on:
       - .dockerignore
 
 env:
-  DOCKER_BUILDKIT: 1
-  COSIGN_EXPERIMENTAL: 1
+  DOCKER_BUILDKIT: "1"
+  DOCKER_BUILD_SUMMARY: "false"
+  COSIGN_EXPERIMENTAL: "1"
 
 jobs:
   metadata:
-    name: Get image and repo details
+    name: Build metadata
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
-      name: ${{ steps.name.outputs.name }}
-      title: ${{ steps.title.outputs.title }}
-      version: ${{ steps.version.outputs.version }}
-      branch: ${{ steps.branch.outputs.branch }}
-      labels: ${{ steps.metadata.outputs.labels }}
-      tags: ${{ steps.metadata.outputs.tags }}
-      platforms: linux/amd64,linux/arm64,linux/ppc64le,linux/s390x,linux/arm/v7,linux/arm/v6 # match caddy
-
+      image-title: ${{ steps.build-metadata.outputs.image-title }}
+      image-name: ${{ steps.build-metadata.outputs.image-name }}
+      caddy-version: ${{ steps.build-metadata.outputs.caddy-version }}
+      branch-name: ${{ steps.build-metadata.outputs.branch-name }}
+      labels: ${{ steps.docker-metadata.outputs.labels }}
+      tags: ${{ steps.docker-metadata.outputs.tags }}
+      platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6,linux/ppc64le,linux/s390x
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Generate docker-compliant image name
-        id: name
-        run: echo "name=$(echo ${GITHUB_REPOSITORY,,} | sed 's/docker-//')" | tee -a $GITHUB_OUTPUT
-
-      - name: Generate OCI image title
-        id: title
-        run: echo "title=$(echo ${GITHUB_REPOSITORY#*/} | sed 's/docker-//')" | tee -a $GITHUB_OUTPUT
-
-      - name: Parse Caddy version
-        id: version
-        run: echo "version=$(grep -Eo 'caddy:[0-9]+\.[0-9]+\.[0-9]+$' Dockerfile | cut -d ':' -f2)" | tee -a $GITHUB_OUTPUT
-
-      - name: Generate build tag from head
-        id: branch
+      - name: Generate build metadata
+        id: build-metadata
+        shell: bash
         run: |
-          export GIT_REF=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
-          echo "branch=$(echo ${GIT_REF,,} | sed 's/[^a-zA-Z0-9]/-/g')" | tee -a $GITHUB_OUTPUT
+          IMAGE_TITLE=$(echo "$GITHUB_REPOSITORY" | sed 's/.*docker-//g')
+          IMAGE_NAME=$(echo "${GITHUB_REPOSITORY/docker-/}" | tr '[:upper:]' '[:lower:]')
+          CADDY_VERSION=$(grep -m 1 -Eo 'caddy:[0-9]+\.[0-9]+\.[0-9]+' Dockerfile \
+            | sed -E 's/.+:([0-9]+\.[0-9]+\.[0-9]+)(.+)?$/\1/g')
+          BRANCH_NAME=$(echo "${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}" \
+            | tr '[:upper:]' '[:lower:]' | sed 's/[^a-zA-Z0-9]/-/g')
+          cat <<EOF | tee -a "$GITHUB_OUTPUT"
+          image-title=$IMAGE_TITLE
+          image-name=$IMAGE_NAME
+          caddy-version=$CADDY_VERSION
+          branch-name=$BRANCH_NAME
+          EOF
 
-      - name: Generate Docker metadata with Caddy version
-        uses: docker/metadata-action@v5
-        id: metadata
+      - name: Generate Docker image metadata
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
+        id: docker-metadata
         with:
           images: |
-            docker.io/${{ steps.name.outputs.name }}
-            ghcr.io/${{ steps.name.outputs.name }}
+            docker.io/${{ steps.build-metadata.outputs.image-name }}
+            ghcr.io/${{ steps.build-metadata.outputs.image-name }}
           tags: |
-            type=semver,pattern={{version}},value=v${{ steps.version.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=v${{ steps.version.outputs.version }}
-            type=semver,pattern={{major}},value=v${{ steps.version.outputs.version }}
+            type=semver,pattern={{version}},value=v${{ steps.build-metadata.outputs.caddy-version }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ steps.build-metadata.outputs.caddy-version }}
+            type=semver,pattern={{major}},value=v${{ steps.build-metadata.outputs.caddy-version }}
           labels: |
-            org.opencontainers.image.title=${{ steps.title.outputs.title }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.title=${{ steps.build-metadata.outputs.image-title }}
+          annotations: |
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.title=${{ steps.build-metadata.outputs.image-title }}
 
   build:
-    name: Build container image
+    name: Build image
     runs-on: ubuntu-latest
     needs: [metadata]
-
     permissions:
-      id-token: write # keyless Cosign signatures
-      pull-requests: write # PR comments
-
+      id-token: write
+      pull-requests: write
     outputs:
-      digest: ${{ steps.build.outputs.digest }}
-      image-ref: ttl.sh/${{ needs.metadata.outputs.name }}:${{ github.sha }}
-
+      image-ref: ttl.sh/${{ needs.metadata.outputs.image-name }}@${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.6.0
+        uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 # v3.6.0
 
       - name: Install regctl
-        uses: iarekylew00t/regctl-installer@v1
+        uses: iarekylew00t/regctl-installer@273ea1255c27762c52a9a481c78ba685f30a9335 # v1.2.15
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@988b5a0280414f521da01fcc63a27aeeb4b104db # v3.6.1
 
-      - name: Wait for build cache to sync
+      # Why?
+      # Since we're building for multiple platforms using QEMU it's takes a decent amount
+      # of time for the build to finish. We use the PR build as cache to drastically speed
+      # things ups!
+      - name: Wait for PR build cache to sync
+        if: github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: PR Cache Sync
+          INTERVAL: 10
         run: |
           while gh run list \
             -R "$GITHUB_REPOSITORY" \
@@ -105,115 +116,120 @@ jobs:
             echo "Re-checking '$WORKFLOW_NAME' in $INTERVAL seconds..." && sleep "$INTERVAL"
           done
           echo "'$WORKFLOW_NAME' completed!"
-        env:
-          GH_TOKEN: ${{ github.token }}
-          WORKFLOW_NAME: Cache Sync
-          INTERVAL: 10
-        if: github.event_name == 'push'
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v6
+      - name: Build CI Docker image
+        uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         id: build
         with:
           context: .
-          push: true # to ttl.sh
-          tags: ttl.sh/${{ needs.metadata.outputs.name }}:${{ github.sha }}
+          push: true
+          tags: ttl.sh/${{ needs.metadata.outputs.image-name }}:${{ github.sha }}
           labels: ${{ needs.metadata.outputs.labels }}
           platforms: ${{ needs.metadata.outputs.platforms }}
-          cache-from: type=registry,ref=ttl.sh/${{ needs.metadata.outputs.name }}:${{ needs.metadata.outputs.branch }}
+          cache-from: type=registry,ref=ttl.sh/${{ needs.metadata.outputs.image-name }}:${{ needs.metadata.outputs.branch-name }}
           cache-to: type=inline,mode=max
 
-      - name: Sign container images
-        run: |
-          cosign sign --yes --recursive \
-            "ttl.sh/$IMAGE_NAME@$IMAGE_DIGEST"
+      # We don't need to sign the CI build because we use the digest as the
+      # reference, which is immutable anyways. Tampering is not an issue.
+      - name: Copy CI build to branch tag
+        shell: bash
         env:
-          IMAGE_NAME: ${{ needs.metadata.outputs.name }}
+          IMAGE_NAME: ${{ needs.metadata.outputs.image-name }}
           IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
-
-      - name: Copy build cache to branch tag
+          BRANCH_NAME: ${{ needs.metadata.outputs.branch-name }}
         run: |
-          regctl image copy --verbosity info --digest-tags --force-recursive \
+          regctl image copy \
+            --verbosity info \
+            --digest-tags \
+            --force-recursive \
             "ttl.sh/$IMAGE_NAME@$IMAGE_DIGEST" \
-            "ttl.sh/$IMAGE_NAME:$BRANCH_TAG"
-        env:
-          IMAGE_NAME: ${{ needs.metadata.outputs.name }}
-          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
-          BRANCH_TAG: ${{ needs.metadata.outputs.branch }}
+            "ttl.sh/$IMAGE_NAME:$BRANCH_NAME"
 
-      - name: Add PR comment for ephemeral build
-        uses: mshick/add-pr-comment@v2
+      - name: Find existing PR comment
+        if: github.event_name == 'pull_request' && cancelled() == false
+        id: find
+        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
         with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: View Workflow Run
+          direction: first
+
+      - name: Add/Update PR success comment
+        if: github.event_name == 'pull_request' && success() == true
+        uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
+        with:
+          message-id: ${{ steps.find.outputs.comment-id }}
           message: |
-            :heavy_check_mark: PR container built successfully!
+            ## ✅ PR built successfully!
 
-            You can access your ephemeral image for up to 24hrs at:  
-            `ttl.sh/${{ needs.metadata.outputs.name }}:${{ github.sha }}`
+            #### **[⏩ View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
 
-            :lock_with_ink_pen: You can verify the integrity of this image using
+            You can access your ephemeral image for up to 24hrs at:
 
-            ```sh
-            cosign verify \
-              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-              --certificate-identity-regexp https://github.com/${{ github.repository }}/.github/workflows/ \
-              ttl.sh/${{ needs.metadata.outputs.name }}:${{ github.sha }}
             ```
-        if: github.event_name == 'pull_request'
+            ttl.sh/${{ needs.metadata.outputs.image-name }}@${{ steps.build.outputs.digest }}
+            ```
 
+      - name: Add/Update PR failure comment
+        if: github.event_name == 'pull_request' && failure() == true
+        uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
+        with:
+          message-id: ${{ steps.find.outputs.comment-id }}
+          message: |
+            ## 💥 PR build failure!
+
+            #### **[⏩ View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
+
+            Uh oh, something went wrong building your PR!
+
+  # We call this as a separate reusable workflow so all the event triggers
+  # are grouped together properly by their corresponding ref
+  # We need the if check because we skip the cache job sometimes
   trivy:
-    name: Run Trivy scanner
+    name: Trivy
     needs: [build]
     uses: ./.github/workflows/trivy.yml
     with:
       image-ref: ${{ needs.build.outputs.image-ref }}
 
   publish:
-    name: Publish container image
+    name: Publish image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [metadata, build, trivy]
     runs-on: ubuntu-latest
-
     permissions:
-      id-token: write # keyless Cosign signatures
-      packages: write # GHCR
-      contents: write # git tags
-
-    if: github.event_name == 'push'
+      id-token: write
+      packages: write
+      contents: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.6.0
+        uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 # v3.6.0
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@988b5a0280414f521da01fcc63a27aeeb4b104db # v3.6.1
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Repository
-        uses: docker/login-action@v3
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Verify container images
-        run: |
-          cosign verify \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            --certificate-identity-regexp https://github.com/$GITHUB_REPOSITORY/.github/workflows/ \
-            ${{ needs.build.outputs.image-ref }}
-
-      - name: Publish container image
-        uses: docker/build-push-action@v6
+      - name: Publish final Docker image
         id: publish
+        uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         with:
           context: .
           push: true
@@ -222,23 +238,54 @@ jobs:
           platforms: ${{ needs.metadata.outputs.platforms }}
           cache-from: type=registry,ref=${{ needs.build.outputs.image-ref }}
 
-      - name: Sign container images
+      # We sign each registry separately
+      - name: Sign final Docker images
+        shell: bash
+        env:
+          IMAGE_NAME: ${{ needs.metadata.outputs.image-name }}
+          IMAGE_DIGEST: ${{ steps.publish.outputs.digest }}
         run: |
           cosign sign --yes --recursive "docker.io/$IMAGE_NAME@$IMAGE_DIGEST"
           cosign sign --yes --recursive "ghcr.io/$IMAGE_NAME@$IMAGE_DIGEST"
-        env:
-          IMAGE_NAME: ${{ needs.metadata.outputs.name }}
-          IMAGE_DIGEST: ${{ steps.publish.outputs.digest }}
 
-      - name: Push version tags
+      # This will automatically attach the SBOM to the release
+      - name: Generate final Docker image SBOM
+        uses: anchore/sbom-action@61119d458adab75f756bc0b9e4bde25725f86a7a # v0.17.2
+        with:
+          format: spdx-json
+          image: ${{ needs.metadata.outputs.image-name }}@${{ steps.publish.outputs.digest }}
+          artifact-name: ${{ needs.metadata.outputs.image-title }}.spdx.json
+          output-file: ${{ needs.metadata.outputs.image-title }}.spdx.json
+
+      - name: Update Git tags
+        shell: bash
+        env:
+          CADDY_VERSION: ${{ needs.metadata.outputs.caddy-version }}
         run: |
           MAJOR=$(echo $CADDY_VERSION | cut -d . -f 1)
           MINOR=$(echo $CADDY_VERSION | cut -d . -f 2)
+          PATCH=$(echo $CADDY_VERSION | cut -d . -f 3)
           git tag -f "v$MAJOR"
           git tag -f "v$MAJOR.$MINOR"
-          git tag -f "v$CADDY_VERSION"
+          git tag -f "v$MAJOR.$MINOR.$PATCH"
           git push -f -u origin "v$MAJOR"
           git push -f -u origin "v$MAJOR.$MINOR"
-          git push -f -u origin "v$CADDY_VERSION"
-        env:
-          CADDY_VERSION: ${{ needs.metadata.outputs.version }}
+          git push -f -u origin "v$MAJOR.$MINOR.$PATCH"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
+        with:
+          tag_name: v${{ needs.metadata.outputs.caddy-version }}
+          make_latest: true
+          generate_release_notes: true
+          body: |
+            ### [🚀 Caddy Release Notes](https://github.com/caddyserver/caddy/releases/tag/v${{ needs.metadata.outputs.caddy-version }})
+
+            ## 🐳 Docker Image
+
+            ```
+            ${{ needs.metadata.outputs.image-name }}:${{ needs.metadata.outputs.caddy-version }}
+            ${{ needs.metadata.outputs.image-name }}@${{ steps.publish.outputs.digest }}
+            ```
+          files: |
+            *.spdx.json

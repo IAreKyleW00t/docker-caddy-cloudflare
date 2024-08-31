@@ -1,0 +1,31 @@
+name: DockerHub README Sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - README.md
+
+jobs:
+  readme:
+    name: Sync README with DockerHub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Generate DockerHub repository name
+        id: repo
+        shell: bash
+        run: |
+          NAME=$(echo "${GITHUB_REPOSITORY/docker-/}" | tr '[:upper:]' '[:lower:]')
+          echo "name=$NAME" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ steps.repo.outputs.name }}
+          short-description: ${{ github.event.repository.description }}
