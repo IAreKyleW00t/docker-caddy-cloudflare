@@ -41,7 +41,7 @@ jobs:
         id: build-metadata
         shell: bash
         run: |
-          IMAGE_TITLE=$(echo "$GITHUB_REPOSITORY" | sed 's/.*docker-//g')
+          IMAGE_TITLE=${GITHUB_REPOSITORY/*docker-/}
           IMAGE_NAME=$(echo "${GITHUB_REPOSITORY/docker-/}" | tr '[:upper:]' '[:lower:]')
           CADDY_VERSION=$(grep -m 1 -Eo 'caddy:[0-9]+\.[0-9]+\.[0-9]+' Dockerfile \
             | sed -E 's/.+:([0-9]+\.[0-9]+\.[0-9]+)(.+)?$/\1/g')
@@ -154,12 +154,12 @@ jobs:
           body-includes: View Workflow Run
           direction: first
 
-      - name: Add/Update PR success comment
-        if: github.event_name == 'pull_request' && success() == true
+      - name: Add/Update PR comment
+        if: github.event_name == 'pull_request' && cancelled() == false
         uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
         with:
           message-id: ${{ steps.find.outputs.comment-id }}
-          message: |
+          message-success: |
             ## ✅ PR built successfully!
 
             #### **[⏩ View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
@@ -169,13 +169,7 @@ jobs:
             ```
             ttl.sh/${{ needs.metadata.outputs.image-name }}@${{ steps.build.outputs.digest }}
             ```
-
-      - name: Add/Update PR failure comment
-        if: github.event_name == 'pull_request' && failure() == true
-        uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
-        with:
-          message-id: ${{ steps.find.outputs.comment-id }}
-          message: |
+          message-failure: |
             ## 💥 PR build failure!
 
             #### **[⏩ View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
@@ -262,9 +256,9 @@ jobs:
         env:
           CADDY_VERSION: ${{ needs.metadata.outputs.caddy-version }}
         run: |
-          MAJOR=$(echo $CADDY_VERSION | cut -d . -f 1)
-          MINOR=$(echo $CADDY_VERSION | cut -d . -f 2)
-          PATCH=$(echo $CADDY_VERSION | cut -d . -f 3)
+          MAJOR=$(echo "$CADDY_VERSION" | cut -d . -f 1)
+          MINOR=$(echo "$CADDY_VERSION" | cut -d . -f 2)
+          PATCH=$(echo "$CADDY_VERSION" | cut -d . -f 3)
           git tag -f "v$MAJOR"
           git tag -f "v$MAJOR.$MINOR"
           git tag -f "v$MAJOR.$MINOR.$PATCH"
