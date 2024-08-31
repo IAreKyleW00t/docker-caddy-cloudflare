@@ -30,7 +30,12 @@ The following tags are available for the `iarekylew00t/caddy-cloudflare` image.
 - `latest`
 - `<version>` (eg: `2.6.4`, including: `2.6`, `2`, etc.)
 
+Check the GitHub [Tags](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tags)
+for a full list of supported versions!
+
 ## Usage
+
+### Docker
 
 Since this is built off the official Docker image all of the same Volumes,
 Environment variables, etc. can be used with this container. Please refer to the
@@ -38,9 +43,12 @@ official [Caddy](https://hub.docker.com/_/caddy) Docker image and
 [docs](https://caddyserver.com/docs/) for more information on using Caddy.
 
 Simply create the container as usual and include your `CF_API_TOKEN` (email no
-longer required for API Tokens). We can utilizing Caddy's support for
+longer required for API Tokens). We can utilize Caddy's support for
 [Environment varaiables](https://caddyserver.com/docs/caddyfile/concepts#environment-variables)
 to pass these values into our `Caddyfile`.
+
+> [!TIP]
+> Be sure to create your `Caddyfile` beforehand to avoid Docker startup errors.
 
 ```sh
 docker run --rm -it \
@@ -54,7 +62,17 @@ docker run --rm -it \
   iarekylew00t/caddy-cloudflare:latest
 ```
 
-Then set the global
+If you prefer `docker-compose` you can use the provided
+[`docker-compose.yml`](docker-compose.yml) after updating it with your
+`CF_API_TOKEN`.
+
+```sh
+docker compose up
+```
+
+### Caddy
+
+Set the global
 [acme_dns](https://caddyserver.com/docs/caddyfile/options#acme-dns) directive
 in your `Caddyfile`
 
@@ -101,6 +119,13 @@ You can easily build the Docker image locally by doing
 
 ```sh
 docker build -t caddy-cloudflare .
+```
+
+If you prefer `docker-compose` you can use the provided
+[`docker-compose.yml`](docker-compose.yml) for building
+
+```sh
+docker compose build
 ```
 
 ## Container signatures
