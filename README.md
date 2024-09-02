@@ -1,10 +1,10 @@
-# Caddy-Cloudflare
+# 🐳 caddy-cloudflare
 
 [![DockerHub](https://img.shields.io/badge/DockerHub-iarekylew00t%2Fcaddy--cloudflare-blue?style=flat)](https://hub.docker.com/r/iarekylew00t/caddy-cloudflare)
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/IAreKyleW00t/docker-caddy-cloudflare?label=version)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tags)
-[![GitHub build status](https://img.shields.io/github/actions/workflow/status/IAreKyleW00t/docker-caddy-cloudflare/docker.yml?style=flat)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/actions/workflows/docker.yml)
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/IAreKyleW00t/docker-caddy-cloudflare?label=Latest%20Version)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tags)
+[![Docker Build & Release](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/actions/workflows/docker.yml/badge.svg)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/actions/workflows/docker.yml)
 [![License](https://img.shields.io/github/license/IAreKyleW00t/docker-caddy-cloudflare)](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/blob/main/LICENSE)
-![Dependabot](https://img.shields.io/badge/dependabot-025E8C?style=flat&logo=dependabot&logoColor=white)
+[![Dependabot](https://img.shields.io/badge/Dependabot-0366d6?style=flat&logo=dependabot&logoColor=white)](.github/dependabot.yml)
 
 The [Caddy](https://hub.docker.com/_/caddy) Docker image with the added
 [caddy-dns/cloudflare](https://github.com/caddy-dns/cloudflare) module for
@@ -29,6 +29,7 @@ The following tags are the latest available for the
 `iarekylew00t/caddy-cloudflare` image.
 
 <!--START-TAGS-->
+
 - [`latest`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.8.4)
 - [`2.8.4`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.8.4)
 - [`2.8`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.8)
