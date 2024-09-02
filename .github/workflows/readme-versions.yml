@@ -70,11 +70,9 @@ jobs:
 
       - name: Push changes back to PR
         if: steps.changed.outputs.changed == 'true'
-        uses: ChromeQ/commit@99a563633526aeb2d5c2b02b1521accee9a8c896 # v2.x
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: iarekylew00t/verified-commit@5e34cab9d13f422123d50ffb5c2473359a7a7010 # v1.0.0
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-          commit-message: "docs: Updating README for v${{ steps.caddy.outputs.version }}"
+          message: "docs: Updating README for v${{ steps.caddy.outputs.version }}"
           files: |
             README.md
