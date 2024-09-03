@@ -152,12 +152,14 @@ jobs:
           body-includes: View Workflow Run
           direction: first
 
-      - name: Add/Update PR comment
-        if: github.event_name == 'pull_request' && cancelled() == false
-        uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
+      - name: Add/Update PR success comment
+        if: github.event_name == 'pull_request' && success()
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
-          message-id: ${{ steps.find.outputs.comment-id }}
-          message-success: |
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find.outputs.comment-id }}
+          edit-mode: replace
+          body: |
             ## ✅ PR built successfully!
 
             #### **[⏩ View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
@@ -167,7 +169,15 @@ jobs:
             ```
             ttl.sh/${{ needs.metadata.outputs.image-name }}@${{ steps.build.outputs.digest }}
             ```
-          message-failure: |
+
+      - name: Add/Update PR failure comment
+        if: github.event_name == 'pull_request' && failure()
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find.outputs.comment-id }}
+          edit-mode: replace
+          body: |
             ## 💥 PR build failure!
 
             #### **[⏩ View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
