@@ -33,7 +33,7 @@ jobs:
       platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6,linux/ppc64le,linux/s390x
     steps:
       - name: Checkout repo
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
 
       - name: Generate build metadata
         id: build-metadata
@@ -81,7 +81,7 @@ jobs:
       image-ref: ttl.sh/${{ needs.metadata.outputs.image-name }}@${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 # v3.6.0
@@ -205,7 +205,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 # v3.6.0
