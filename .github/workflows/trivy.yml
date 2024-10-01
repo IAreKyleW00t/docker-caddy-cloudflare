@@ -34,7 +34,7 @@ jobs:
           output: trivy-results.sarif
 
       - name: Upload scan results
-        uses: github/codeql-action/upload-sarif@461ef6c76dfe95d5c364de2f431ddbd31a417628 # v3.26.9
+        uses: github/codeql-action/upload-sarif@e2b3eafc8d227b0241d48be5f425d47c2d750a13 # v3.26.10
         if: cancelled() == false
         with:
           sarif_file: trivy-results.sarif
@@ -77,7 +77,7 @@ jobs:
           output: trivy-results.sarif
 
       - name: Upload scan results
-        uses: github/codeql-action/upload-sarif@461ef6c76dfe95d5c364de2f431ddbd31a417628 # v3.26.9
+        uses: github/codeql-action/upload-sarif@e2b3eafc8d227b0241d48be5f425d47c2d750a13 # v3.26.10
         if: cancelled() == false
         with:
           sarif_file: trivy-results.sarif
