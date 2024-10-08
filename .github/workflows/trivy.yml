@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
 
       - name: Scan repo filesystem
-        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # 0.24.0
+        uses: aquasecurity/trivy-action@f781cce5aab226378ee181d764ab90ea0be3cdd8 # 0.25.0
         with:
           scan-type: fs
           format: sarif
@@ -70,7 +70,7 @@ jobs:
           echo "image-ref=$IMAGE_REF" | tee -a "$GITHUB_OUTPUT"
 
       - name: Scan image
-        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # 0.24.0
+        uses: aquasecurity/trivy-action@f781cce5aab226378ee181d764ab90ea0be3cdd8 # 0.25.0
         with:
           image-ref: ${{ steps.normalize.outputs.image-ref }}
           format: sarif
