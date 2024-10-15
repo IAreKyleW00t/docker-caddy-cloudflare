@@ -279,7 +279,7 @@ jobs:
         with:
           tag_name: v${{ needs.metadata.outputs.caddy-version }}
           make_latest: true
-          generate_release_notes: true
+          generate_release_notes: false
           body: |
             ### [🚀 Caddy v${{ needs.metadata.outputs.caddy-version }} Changelog](https://github.com/caddyserver/caddy/releases/tag/v${{ needs.metadata.outputs.caddy-version }})
 
