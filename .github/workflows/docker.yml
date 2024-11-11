@@ -87,7 +87,7 @@ jobs:
         uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
 
       - name: Install regctl
-        uses: iarekylew00t/regctl-installer@a7cfde8f08b4bd3862150942f7384d4836ffff49 # v3.0.7
+        uses: iarekylew00t/regctl-installer@69dac59da4709547a777d7d34d05de068fc360b4 # v3.0.8
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
@@ -252,7 +252,7 @@ jobs:
 
       # This will automatically attach the SBOM to the release
       - name: Generate final Docker image SBOM
-        uses: anchore/sbom-action@251a468eed47e5082b105c3ba6ee500c0e65a764 # v0.17.6
+        uses: anchore/sbom-action@fc46e51fd3cb168ffb36c6d1915723c47db58abb # v0.17.7
         with:
           format: spdx-json
           image: ${{ needs.metadata.outputs.image-name }}@${{ steps.publish.outputs.digest }}
