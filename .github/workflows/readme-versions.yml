@@ -70,7 +70,7 @@ jobs:
 
       - name: Push changes back to PR
         if: steps.changed.outputs.changed == 'true'
-        uses: iarekylew00t/verified-bot-commit@429d64ac524c363cfc81b286ba703c2c1c28b171 # v1.0.8
+        uses: iarekylew00t/verified-bot-commit@ce43e207b10e1789517c2a8dab3a362e6096746f # v1.0.9
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           message: "docs: Updating README for v${{ steps.caddy.outputs.version }}"
