@@ -252,7 +252,7 @@ jobs:
 
       # This will automatically attach the SBOM to the release
       - name: Generate final Docker image SBOM
-        uses: anchore/sbom-action@9246b90769f852b3a8921f330c59e0b3f439d6e9 # v0.20.1
+        uses: anchore/sbom-action@cee1b8e05ae5b2593a75e197229729eabaa9f8ec # v0.20.2
         with:
           format: spdx-json
           image: ${{ needs.metadata.outputs.image-name }}@${{ steps.publish.outputs.digest }}
