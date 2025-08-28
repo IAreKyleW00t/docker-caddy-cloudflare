@@ -29,8 +29,8 @@ The following tags are the latest available for the
 `iarekylew00t/caddy-cloudflare` image.
 
 <!--START-TAGS-->
-- [`latest`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.10.0)
-- [`2.10.0`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.10.0)
+- [`latest`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.10.2)
+- [`2.10.2`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.10.2)
 - [`2.10`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2.10)
 - [`2`](https://github.com/IAreKyleW00t/docker-caddy-cloudflare/tree/v2)
 <!--END-TAGS-->
