@@ -21,7 +21,7 @@ jobs:
     if: github.event.pull_request.merged == true
     steps:
       - name: Install regctl
-        uses: iarekylew00t/regctl-installer@ec479b66f331b0d55b945bb785fbde4862cc80b9 # v4.0.1
+        uses: iarekylew00t/regctl-installer@5e6066a176b867bef8b4b5f1b3cb7464020f3942 # v4.0.2
 
       - name: Copy PR build cache to branch
         shell: bash
