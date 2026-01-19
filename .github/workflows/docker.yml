@@ -87,7 +87,7 @@ jobs:
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
 
       - name: Install regctl
-        uses: iarekylew00t/regctl-installer@4878c078bafd5fed5242b0e0626f1095d0ca3779 # v4.0.6
+        uses: iarekylew00t/regctl-installer@e51d031c4422b9a83e14c539c03b7533b45084e7 # v4.0.7
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
