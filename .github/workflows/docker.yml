@@ -33,7 +33,7 @@ jobs:
       platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6,linux/ppc64le,linux/s390x
     steps:
       - name: Checkout repo
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Generate build metadata
         id: build-metadata
@@ -81,13 +81,13 @@ jobs:
       image-ref: ttl.sh/${{ needs.metadata.outputs.image-name }}@${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
 
       - name: Install regctl
-        uses: iarekylew00t/regctl-installer@4878c078bafd5fed5242b0e0626f1095d0ca3779 # v4.0.6
+        uses: iarekylew00t/regctl-installer@e51d031c4422b9a83e14c539c03b7533b45084e7 # v4.0.7
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
@@ -205,7 +205,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
@@ -252,7 +252,7 @@ jobs:
 
       # This will automatically attach the SBOM to the release
       - name: Generate final Docker image SBOM
-        uses: anchore/sbom-action@0b82b0b1a22399a1c542d4d656f70cd903571b5c # v0.21.1
+        uses: anchore/sbom-action@62ad5284b8ced813296287a0b63906cb364b73ee # v0.22.0
         with:
           format: spdx-json
           image: ${{ needs.metadata.outputs.image-name }}@${{ steps.publish.outputs.digest }}
