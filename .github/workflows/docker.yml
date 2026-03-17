@@ -87,7 +87,7 @@ jobs:
         uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
 
       - name: Install regctl
-        uses: iarekylew00t/regctl-installer@8ccdb8b7de26bc6f875494b11788ce4bee1a92cc # v4.0.9
+        uses: iarekylew00t/regctl-installer@af36fb7a5cbba28bb2f400ea0a7b06fc1c5ea426 # v4.0.10
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
@@ -275,7 +275,7 @@ jobs:
           git push -f -u origin "v$MAJOR.$MINOR.$PATCH"
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           tag_name: v${{ needs.metadata.outputs.caddy-version }}
           make_latest: true
