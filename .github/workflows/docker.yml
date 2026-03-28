@@ -2,6 +2,12 @@ name: Docker Build & Release
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        type: boolean
+        description: Manually publish (and overwrite) the Docker image, signatures, and release
+        required: false
+        default: false
   push:
     branches: [main]
     paths:
@@ -79,6 +85,7 @@ jobs:
       pull-requests: write
     outputs:
       image-ref: ttl.sh/${{ needs.metadata.outputs.image-name }}@${{ steps.build.outputs.digest }}
+      module-version: ${{ steps.module.outputs.module-version }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -126,6 +133,24 @@ jobs:
           platforms: ${{ needs.metadata.outputs.platforms }}
           cache-from: type=registry,ref=ttl.sh/${{ needs.metadata.outputs.image-name }}:${{ needs.metadata.outputs.branch-name }}
           cache-to: type=inline,mode=max
+
+      - name: Check docker image and parse cloudflare module version
+        id: module
+        shell: bash
+        env:
+          IMAGE: ttl.sh/${{ needs.metadata.outputs.image-name }}:${{ github.sha }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          docker pull "$IMAGE@$IMAGE_DIGEST"
+          MODULE=$(docker run --rm "$IMAGE@$IMAGE_DIGEST" \
+            caddy list-modules --versions | grep "dns.providers.cloudflare")
+          if [ -z "$MODULE" ]; then
+            echo "::error::cloudflare module not found"
+            exit 1
+          fi
+
+          MODULE_VERSION=$(echo "$MODULE" | awk '{print $2}')
+          echo "module-version=$MODULE_VERSION" | tee -a "$GITHUB_OUTPUT"
 
       # We don't need to sign the CI build because we use the digest as the
       # reference, which is immutable anyways. Tampering is not an issue.
@@ -196,7 +221,9 @@ jobs:
 
   publish:
     name: Publish image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish))
     needs: [metadata, build, trivy]
     runs-on: ubuntu-latest
     permissions:
@@ -281,7 +308,7 @@ jobs:
           make_latest: true
           generate_release_notes: false
           body: |
-            ### [🚀 Caddy v${{ needs.metadata.outputs.caddy-version }} Changelog](https://github.com/caddyserver/caddy/releases/tag/v${{ needs.metadata.outputs.caddy-version }})
+            ### 🚀 Caddy [v${{ needs.metadata.outputs.caddy-version }}](https://github.com/caddyserver/caddy/releases/tag/v${{ needs.metadata.outputs.caddy-version }}) | 📦 Cloudflare module [${{ needs.build.outputs.module-version }}](https://github.com/caddy-dns/cloudflare/releases/tag/${{ needs.build.outputs.module-version }})
 
             ## 🐳 Docker Images
 
